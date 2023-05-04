@@ -1,8 +1,8 @@
-const dotenv = require('dotenv');
-dotenv.config({ path: './config.env' });
+const dotenv = require('dotenv')
+dotenv.config({ path: './config.env' })
 
-const mongoose = require('mongoose');
-const { app } = require('./app');
+const mongoose = require('mongoose')
+const { app } = require('./app')
 
 /**
  * DB Connection to atlas
@@ -10,14 +10,14 @@ const { app } = require('./app');
 const DB = process.env.DB_CLOUD_CONNECTION?.replace(
   '<PASSWORD>',
   process.env.DB_PASSWORD
-);
+)
 
 mongoose
   .connect(DB, {
-    useNewUrlParser: true,
+    useNewUrlParser: true
   })
   .then(() => console.log(`Mongo DB Connected`))
-  .catch((err) => console.log(err));
+  .catch((err) => console.log(err))
 
-const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => console.log(`App listening on port ${PORT}`));
+const PORT = process.env.PORT || 3000
+app.listen(PORT, () => console.log(`App listening on port ${PORT}`))

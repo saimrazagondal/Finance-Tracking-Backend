@@ -13,13 +13,18 @@ const transactionSchema = new mongoose.Schema({
       message: 'Invalid transaction type',
     },
   },
-  dateOccurred: {
+  date: {
     type: Date,
     default: Date.now(),
   },
   description: {
     type: String,
     maxlength: [200, 'Description cannot be more than 200 characters long'],
+  },
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true,
   },
 });
 

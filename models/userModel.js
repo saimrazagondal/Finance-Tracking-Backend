@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 
 const userSchema = new mongoose.Schema({
   email: {
@@ -8,6 +9,18 @@ const userSchema = new mongoose.Schema({
   password: {
     type: String,
     required: [true, 'Password is required'],
+    minlength: [6, 'Password must be at least 6 characters long'],
+    select: false,
+  },
+  passwordConfirm: {
+    type: String,
+    required: [true, 'Confirm Password is required'],
+    validate: {
+      validator: function (el) {
+        return el === this.password;
+      },
+      message: 'Passwords are not the same',
+    },
   },
   firstName: {
     type: String,
@@ -17,8 +30,38 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Last Name is required'],
   },
-  profileImg: String,
+  passwordChangedAt: { type: Date, select: false },
+  profileImg: { type: String },
 });
+
+userSchema.pre('save', async function (next) {
+  if (!this.isModified('password')) return next();
+
+  this.password = await bcrypt.hash(this.password, 12);
+  this.passwordConfirm = undefined;
+  next();
+});
+
+userSchema.methods.comparePasswords = async function (
+  candidatePassword,
+  userPassword
+) {
+  return await bcrypt.compare(candidatePassword, userPassword);
+};
+
+// Checks if password was changed after issuance of jwt token
+userSchema.methods.changedPasswordAfter = function (JWTTimestamp) {
+  if (this.passwordChangedAt) {
+    const changedTimeStamp = parseInt(
+      this.passwordChangedAt.getTime() / 1000,
+      10
+    );
+
+    return JWTTimestamp < changedTimeStamp;
+  }
+
+  return false;
+};
 
 const User = mongoose.model('User', userSchema);
 
