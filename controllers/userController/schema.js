@@ -27,8 +27,17 @@ const updateUserByIdSchema = {
   }),
 };
 
+const deleteUserByIdSchema = {
+  queryStringParameters: Joi.object({}),
+  body: Joi.object({}),
+  pathParameters: Joi.object({
+    id: Joi.string().required(),
+  }),
+};
+
 module.exports = {
   getUserByIdSchema,
   getAllUsersSchema,
   updateUserByIdSchema,
+  deleteUserByIdSchema,
 };

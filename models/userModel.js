@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
+const { USER_STATUSES } = require('../utils/constants');
 
 const userSchema = new mongoose.Schema({
   email: {
@@ -32,6 +33,12 @@ const userSchema = new mongoose.Schema({
   },
   passwordChangedAt: { type: Date, select: false },
   profileImg: { type: String },
+  status: {
+    type: String,
+    default: USER_STATUSES.ACTIVE,
+    enum: [USER_STATUSES.ACTIVE, USER_STATUSES.INACTIVE],
+  },
+  deactivatedAt: { type: Date, select: false },
 });
 
 userSchema.pre('save', async function (next) {

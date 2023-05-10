@@ -2,6 +2,7 @@ const User = require('../../models/userModel');
 const AppError = require('../../utils/CustomError');
 const { catchAsync } = require('../../utils/catchAsync.js');
 const jwt = require('jsonwebtoken');
+const { USER_STATUSES } = require('../../utils/constants');
 
 const generateToken = (data) => {
   return jwt.sign(data, process.env.JWT_TOKEN_KEY, {
@@ -12,10 +13,16 @@ const generateToken = (data) => {
 const login = catchAsync(async (req, res, next) => {
   const { email, password } = req.body;
 
-  const user = await User.findOne({ email }).select('+password');
+  const user = await User.findOne({ email }).select('+password +deactivatedAt');
 
   if (!user) return next(new AppError('User does not exist', 404));
 
+  // If user has been deactivated, reactivate user
+  // TODO Check deactivatedAt that
+  if (user.status === USER_STATUSES.INACTIVE)
+    await User.updateOne({ email }, { status: USER_STATUSES.ACTIVE });
+
+  // Compare passwords
   if (!(await user.comparePasswords(password, user.password)))
     return next(new AppError('Invalid email/password', 400));
 
