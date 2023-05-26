@@ -1,4 +1,7 @@
 const mongoose = require('mongoose');
+const {
+  TRANSACTION_TYPES: { INCOME, EXPENSE },
+} = require('../utils/constants');
 
 const transactionSchema = new mongoose.Schema({
   amount: {
@@ -9,7 +12,7 @@ const transactionSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Transaction Type is required'],
     enum: {
-      values: ['Income', 'Expense'],
+      values: [INCOME, EXPENSE],
       message: 'Invalid transaction type',
     },
   },
@@ -25,6 +28,9 @@ const transactionSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true,
+  },
+  category: {
+    type: String,
   },
 });
 
