@@ -24,7 +24,10 @@
     "express": "^4.18.1",
     "joi": "^17.6.0",
     "jsonwebtoken": "^9.0.0",
-    "mongoose": "^6.3.4"
+    "mongoose": "^6.3.4",
+    "pg": "^8.11.0",
+    "pg-hstore": "^2.3.4",
+    "sequelize": "^6.31.1"
   },
   "devDependencies": {
     "morgan": "^1.10.0",

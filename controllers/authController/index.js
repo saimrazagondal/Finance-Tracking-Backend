@@ -1,8 +1,8 @@
-const User = require('../../models/userModel');
 const AppError = require('../../utils/CustomError');
 const { catchAsync } = require('../../utils/catchAsync.js');
 const jwt = require('jsonwebtoken');
 const { USER_STATUSES } = require('../../utils/constants');
+const UserModel = require('../../models/userModel-pg');
 
 const generateToken = (data) => {
   return jwt.sign(data, process.env.JWT_TOKEN_KEY, {
@@ -13,21 +13,24 @@ const generateToken = (data) => {
 const login = catchAsync(async (req, res, next) => {
   const { email, password } = req.body;
 
-  const user = await User.findOne({ email }).select('+password +deactivatedAt');
+  const user = await UserModel.findOne({ where: { email } });
 
   if (!user) return next(new AppError('User does not exist', 404));
 
   // If user has been deactivated, reactivate user
   // TODO Check deactivatedAt that
   if (user.status === USER_STATUSES.INACTIVE)
-    await User.updateOne({ email }, { status: USER_STATUSES.ACTIVE });
+    await UserModel.update(
+      { status: USER_STATUSES.ACTIVE },
+      { where: { email } }
+    );
 
   // Compare passwords
   if (!(await user.comparePasswords(password, user.password)))
     return next(new AppError('Invalid email/password', 400));
 
   const token = generateToken({
-    id: user._id,
+    id: user.id,
     email: user.email,
   });
 
@@ -46,17 +49,19 @@ const signup = catchAsync(async (req, res) => {
     passwordChangedAt,
   } = req.body;
 
-  const createdUser = await User.create({
+  if (password !== passwordConfirm)
+    return next(new AppError(`Passwords do not match`, 400));
+
+  const createdUser = await UserModel.create({
     firstName,
     lastName,
     email,
     password,
-    passwordConfirm,
     passwordChangedAt,
   });
 
   const token = generateToken({
-    id: createdUser._id,
+    id: createdUser.id,
     email: createdUser.email,
   });
 
@@ -68,18 +73,20 @@ const signup = catchAsync(async (req, res) => {
 const changePassword = catchAsync(async (req, res, next) => {
   const { currentPassword, updatedPassword, updatedPasswordConfirm } = req.body;
 
+  const user = await UserModel.findByPk(req.user.id);
+
+  if (!(await user.comparePasswords(currentPassword, user.password)))
+    return next(new AppError(`Incorrect password`, 401));
+
   if (currentPassword === updatedPassword)
     return next(
       new AppError('Current and Updated passwords cannot be the same', 400)
     );
 
-  const user = await User.findById(req.user.id).select('+password');
-
-  if (!(await user.comparePasswords(currentPassword, user.password)))
-    return next(new AppError(`Incorrect password`, 401));
+  if (updatedPassword !== updatedPasswordConfirm)
+    return next(new AppError(`Passwords do not match`, 400));
 
   user.password = updatedPassword;
-  user.passwordConfirm = updatedPasswordConfirm;
 
   await user.save();
 

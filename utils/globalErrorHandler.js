@@ -22,6 +22,9 @@ exports.globalErrorHandler = (err, req, res, next) => {
   } else if (process.env.NODE_ENV === 'production') {
     let error = { ...err, message: err.message };
 
+    if (error.name === 'SequelizeValidationError')
+      error = new AppError(error?.errors?.[0]?.message, 400);
+
     if (error.name === 'TokenExpiredError')
       error = new AppError(`Token has expired!`, 401);
 
