@@ -40,11 +40,12 @@ const User = sequelize.define(
       defaultValue: USER_STATUSES.ACTIVE,
       validate: {
         isIn: {
-          args: [USER_STATUSES.ACTIVE, USER_STATUSES.INACTIVE],
+          args: [[USER_STATUSES.ACTIVE, USER_STATUSES.INACTIVE]],
           msg: 'Invalid value for status',
         },
       },
     },
+    deactivatedAt: { type: DataTypes.DATE },
   },
   {
     hooks: {

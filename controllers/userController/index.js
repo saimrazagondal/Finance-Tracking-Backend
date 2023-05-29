@@ -1,11 +1,15 @@
 const Transaction = require('../../models/transactionModel');
-const User = require('../../models/userModel');
+const UserModel = require('../../models/userModel-pg');
+
 const AppError = require('../../utils/CustomError');
 const { catchAsync } = require('../../utils/catchAsync');
 const { USER_STATUSES } = require('../../utils/constants');
 
 exports.getAllUsers = catchAsync(async (req, res, next) => {
-  const users = await User.find({ status: USER_STATUSES.ACTIVE });
+  const users = await UserModel.findAll({
+    attributes: { exclude: ['password', 'passwordChangedAt'] },
+    where: { status: USER_STATUSES.ACTIVE },
+  });
 
   if (users.length === 0) return next(new AppError(`No record found`, 404));
 
@@ -27,25 +31,23 @@ exports.getUserById = catchAsync(async (req, res, next) => {
   const { includeTransactions } = req.query;
 
   // User is only authorized to fetch his own details
-  if (id !== req.user.id)
+  if (parseInt(id) !== req.user.id)
     return next(
       new AppError(`You are not authorized to access this user`, 401)
     );
 
-  // const user = req.user.toObject();
-  const user = req.user.toJSON();
-
+  // TODO
   // Include all transactions for user
-  if (includeTransactions) {
-    user.transactions = await Transaction.find({
-      user: id,
-    })
-      .select('-user')
-      .lean();
-  }
+  // if (includeTransactions) {
+  //   user.transactions = await Transaction.find({
+  //     user: id,
+  //   })
+  //     .select('-user')
+  //     .lean();
+  // }
 
   return res.status(200).json({
-    data: { user },
+    data: { user: req.user },
   });
 });
 
@@ -58,20 +60,16 @@ exports.updateUserById = catchAsync(async (req, res, next) => {
   const { id } = req.params;
 
   // User is only authorized to update his own details
-  if (id !== req.user.id)
+  if (parseInt(id) !== req.user.id)
     return next(
       new AppError(`You are not authorized to update this user`, 401)
     );
 
-  const updated = await User.findByIdAndUpdate(
-    id,
-    { ...req.body },
-    { new: true }
-  );
+  await UserModel.update({ ...req.body }, { where: { id } });
 
-  return res
-    .status(200)
-    .json({ message: 'Updated successfully!', updatedUser: updated });
+  return res.status(200).json({
+    message: 'Updated successfully!',
+  });
 });
 
 /**
@@ -83,13 +81,17 @@ exports.deactivateUser = catchAsync(async (req, res, next) => {
   const { id } = req.params;
 
   // User is only authorized to update his own details
-  if (id !== req.user.id) return next(new AppError(`Unauthorized`, 401));
+  if (parseInt(id) !== req.user.id)
+    return next(new AppError(`Unauthorized`, 401));
 
   // change status from active to inactive
-  await User.findByIdAndUpdate(id, {
-    status: USER_STATUSES.INACTIVE,
-    deactivatedAt: Date.now(),
-  });
+  await UserModel.update(
+    {
+      status: USER_STATUSES.INACTIVE,
+      deactivatedAt: Date.now(),
+    },
+    { where: { id } }
+  );
 
   return res.status(200).json({ message: 'User Deactivated!' });
 });

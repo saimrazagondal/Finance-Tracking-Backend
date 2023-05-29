@@ -7,3 +7,9 @@ exports.TRANSACTION_TYPES = {
   INCOME: 'INCOME',
   EXPENSE: 'EXPENSE',
 };
+
+exports.SENSITIVE_USER_FIELDS = [
+  'password',
+  'passwordChangedAt',
+  'deactivatedAt',
+];

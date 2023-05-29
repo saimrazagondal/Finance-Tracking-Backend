@@ -18,10 +18,10 @@ const login = catchAsync(async (req, res, next) => {
   if (!user) return next(new AppError('User does not exist', 404));
 
   // If user has been deactivated, reactivate user
-  // TODO Check deactivatedAt that
+  // TODO Check deactivatedAt to be les than 2 weeks
   if (user.status === USER_STATUSES.INACTIVE)
     await UserModel.update(
-      { status: USER_STATUSES.ACTIVE },
+      { status: USER_STATUSES.ACTIVE, deactivatedAt: null },
       { where: { email } }
     );
 

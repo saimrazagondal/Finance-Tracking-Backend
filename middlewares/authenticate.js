@@ -2,9 +2,9 @@ const { promisify } = require('util');
 const jwt = require('jsonwebtoken');
 const AppError = require('../utils/CustomError');
 const { catchAsync } = require('../utils/catchAsync');
-const User = require('../models/userModel');
 const UserModel = require('../models/userModel-pg');
 const { USER_STATUSES } = require('../utils/constants');
+const { removeSensitiveUserData } = require('../utils/helpers');
 
 exports.authenticate = catchAsync(async (req, res, next) => {
   // Check if token is present
@@ -36,6 +36,6 @@ exports.authenticate = catchAsync(async (req, res, next) => {
     );
 
   // Grant access
-  req.user = user;
+  req.user = removeSensitiveUserData(user.toJSON());
   next();
 });
