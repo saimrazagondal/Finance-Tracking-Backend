@@ -26,12 +26,12 @@ const updateTransactionSchema = {
   queryStringParameters: Joi.object({}),
   body: Joi.object({
     amount: Joi.number(),
-    transactionType: Joi.string().valid('Income', 'Expense'),
+    transactionType: Joi.string().valid(INCOME, EXPENSE),
     date: Joi.date(),
     description: Joi.string().max(200),
   }),
   pathParameters: Joi.object({
-    id: Joi.string().required(),
+    id: Joi.number().required(),
   }),
 };
 
@@ -39,7 +39,7 @@ const deleteTransactionSchema = {
   queryStringParameters: Joi.object({}),
   body: Joi.object({}),
   pathParameters: Joi.object({
-    id: Joi.string().required(),
+    id: Joi.number().required(),
   }),
 };
 

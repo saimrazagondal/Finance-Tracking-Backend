@@ -1,10 +1,10 @@
-const Transaction = require('../../models/transactionModel');
+const Transaction = require('../../models/transactions');
 const AppError = require('../../utils/CustomError');
 
 exports.checkTransactionExists = async (req, res, next) => {
   const { id } = req.params;
 
-  const trans = await Transaction.findById(id).lean();
+  const trans = await Transaction.findByPk(id);
 
   if (!trans) next(new AppError(`Transaction not found`, 404));
 

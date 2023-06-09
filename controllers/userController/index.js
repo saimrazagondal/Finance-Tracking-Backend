@@ -1,13 +1,16 @@
-const Transaction = require('../../models/transactionModel');
-const UserModel = require('../../models/userModel-pg');
+const Transaction = require('../../models/transactions');
+const User = require('../../models/user');
 
 const AppError = require('../../utils/CustomError');
 const { catchAsync } = require('../../utils/catchAsync');
-const { USER_STATUSES } = require('../../utils/constants');
+const {
+  USER_STATUSES,
+  SENSITIVE_USER_FIELDS,
+} = require('../../utils/constants');
 
 exports.getAllUsers = catchAsync(async (req, res, next) => {
-  const users = await UserModel.findAll({
-    attributes: { exclude: ['password', 'passwordChangedAt'] },
+  const users = await User.findAll({
+    attributes: { exclude: SENSITIVE_USER_FIELDS },
     where: { status: USER_STATUSES.ACTIVE },
   });
 
@@ -36,15 +39,14 @@ exports.getUserById = catchAsync(async (req, res, next) => {
       new AppError(`You are not authorized to access this user`, 401)
     );
 
-  // TODO
   // Include all transactions for user
-  // if (includeTransactions) {
-  //   user.transactions = await Transaction.find({
-  //     user: id,
-  //   })
-  //     .select('-user')
-  //     .lean();
-  // }
+  if (includeTransactions) {
+    req.user.transactions = await Transaction.findAll({
+      where: {
+        userId: id,
+      },
+    });
+  }
 
   return res.status(200).json({
     data: { user: req.user },
@@ -65,7 +67,7 @@ exports.updateUserById = catchAsync(async (req, res, next) => {
       new AppError(`You are not authorized to update this user`, 401)
     );
 
-  await UserModel.update({ ...req.body }, { where: { id } });
+  await User.update({ ...req.body }, { where: { id } });
 
   return res.status(200).json({
     message: 'Updated successfully!',
@@ -85,7 +87,7 @@ exports.deactivateUser = catchAsync(async (req, res, next) => {
     return next(new AppError(`Unauthorized`, 401));
 
   // change status from active to inactive
-  await UserModel.update(
+  await User.update(
     {
       status: USER_STATUSES.INACTIVE,
       deactivatedAt: Date.now(),

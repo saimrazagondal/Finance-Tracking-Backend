@@ -1,7 +1,8 @@
-const { Sequelize, DataTypes } = require('sequelize');
+const { DataTypes } = require('sequelize');
 const sequelize = require('../db/client');
 const bcrypt = require('bcryptjs');
 const { USER_STATUSES } = require('../utils/constants');
+const { removeSensitiveUserData } = require('../utils/helpers');
 
 const User = sequelize.define(
   'user',
@@ -48,11 +49,15 @@ const User = sequelize.define(
     deactivatedAt: { type: DataTypes.DATE },
   },
   {
+    tableName: 'user',
     hooks: {
       beforeCreate: async (user) => {
         if (user.password) {
           user.password = await bcrypt.hash(user.password, 12);
         }
+      },
+      afterCreate: (record) => {
+        removeSensitiveUserData(record?.dataValues);
       },
       beforeUpdate: async (user, options) => {
         if (options.fields.includes('password')) {
@@ -83,7 +88,5 @@ User.prototype.changedPasswordAfter = function (JWTTimestamp) {
 
   return false;
 };
-
-User.sync({});
 
 module.exports = User;

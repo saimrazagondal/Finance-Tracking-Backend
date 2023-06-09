@@ -2,24 +2,11 @@ const dotenv = require('dotenv');
 dotenv.config({ path: './config.env' });
 
 const sequelize = require('./db/client');
-// const mongoose = require('mongoose')
 const { app } = require('./app');
 
 /**
- * DB Connection to atlas
+ * Postgres DB Connection
  */
-// const DB = process.env.DB_CLOUD_CONNECTION?.replace(
-//   '<PASSWORD>',
-//   process.env.DB_PASSWORD
-// )
-
-// mongoose
-//   .connect(DB, {
-//     useNewUrlParser: true
-//   })
-//   .then(() => console.log(`Mongo DB Connected`))
-//   .catch((err) => console.log(err))
-
 sequelize
   .authenticate()
   .then(() => console.log('Connection has been established successfully.'))

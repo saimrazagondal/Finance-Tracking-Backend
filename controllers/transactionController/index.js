@@ -1,10 +1,12 @@
-const Transaction = require('../../models/transactionModel');
+const Transaction = require('../../models/transactions');
 const AppError = require('../../utils/CustomError');
 const { catchAsync } = require('../../utils/catchAsync');
 
 const getAllTransactions = catchAsync(async (req, res) => {
-  const transactions = await Transaction.find();
-  // const transactions = await Transaction.find().populate('user');
+  const transactions = await Transaction.findAll({
+    where: { userId: req?.user?.id },
+    order: [['createdAt', 'ASC']],
+  });
 
   res.status(200).json({
     data: { results: transactions.length, transactions },
@@ -18,8 +20,8 @@ const createTransaction = catchAsync(async (req, res) => {
     amount,
     transactionType,
     description,
-    dateOccurred: date,
-    user: req.user.id,
+    date,
+    userId: req.user.id,
   });
 
   res.status(201).json({
@@ -36,15 +38,21 @@ const getTransactionById = catchAsync(async (req, res) => {
 const updateTransactionById = catchAsync(async (req, res) => {
   const { id } = req.params;
 
-  const updatedTransaction = await Transaction.findByIdAndUpdate(
-    id,
+  // Object.entries(req.body).forEach(([key, value]) => {
+  //   req.transaction[key] = value;
+  // });
+
+  // await req.transaction.save();
+
+  const updated = await Transaction.update(
     { ...req.body },
-    { new: true }
+    { where: { id }, returning: true, plain: true }
   );
 
   res.status(200).json({
     message: 'Transaction updated successfully!',
-    transaction: updatedTransaction,
+    transaction: updated?.[1]?.dataValues,
+    // transaction: req.transaction,
   });
 });
 
@@ -52,13 +60,13 @@ const deleteTransactionById = catchAsync(async (req, res, next) => {
   const { id } = req.params;
 
   // check that only the logged in user can delete their id
-  if (req.transaction?.user?.toString() !== req.user?._id.toString())
+  if (req.transaction?.userId !== req.user?.id)
     return next(
       new AppError(`You are not authorized to delete this transaction`, 401)
     );
 
   // delete transaction
-  await Transaction.deleteOne({ _id: id });
+  await Transaction.destroy({ where: { id } });
 
   res.status(200).json({
     message: 'Transaction deleted successfully!',

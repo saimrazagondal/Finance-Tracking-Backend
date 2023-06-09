@@ -12,7 +12,7 @@ const getUserByIdSchema = {
   }),
   body: Joi.object({}),
   pathParameters: Joi.object({
-    id: Joi.string().required(),
+    id: Joi.number().required(),
   }),
 };
 
@@ -23,7 +23,7 @@ const updateUserByIdSchema = {
     lastName: Joi.string(),
   }),
   pathParameters: Joi.object({
-    id: Joi.string().required(),
+    id: Joi.number().required(),
   }),
 };
 
@@ -31,7 +31,7 @@ const deleteUserByIdSchema = {
   queryStringParameters: Joi.object({}),
   body: Joi.object({}),
   pathParameters: Joi.object({
-    id: Joi.string().required(),
+    id: Joi.number().required(),
   }),
 };
 

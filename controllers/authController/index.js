@@ -2,7 +2,8 @@ const AppError = require('../../utils/CustomError');
 const { catchAsync } = require('../../utils/catchAsync.js');
 const jwt = require('jsonwebtoken');
 const { USER_STATUSES } = require('../../utils/constants');
-const UserModel = require('../../models/userModel-pg');
+const User = require('../../models/user');
+const { removeSensitiveUserData } = require('../../utils/helpers');
 
 const generateToken = (data) => {
   return jwt.sign(data, process.env.JWT_TOKEN_KEY, {
@@ -13,14 +14,14 @@ const generateToken = (data) => {
 const login = catchAsync(async (req, res, next) => {
   const { email, password } = req.body;
 
-  const user = await UserModel.findOne({ where: { email } });
+  let user = await User.findOne({ where: { email } });
 
   if (!user) return next(new AppError('User does not exist', 404));
 
   // If user has been deactivated, reactivate user
   // TODO Check deactivatedAt to be les than 2 weeks
   if (user.status === USER_STATUSES.INACTIVE)
-    await UserModel.update(
+    await User.update(
       { status: USER_STATUSES.ACTIVE, deactivatedAt: null },
       { where: { email } }
     );
@@ -34,8 +35,11 @@ const login = catchAsync(async (req, res, next) => {
     email: user.email,
   });
 
+  user = removeSensitiveUserData(user?.dataValues);
+
   return res.status(200).json({
     token: token,
+    user,
   });
 });
 
@@ -52,7 +56,7 @@ const signup = catchAsync(async (req, res) => {
   if (password !== passwordConfirm)
     return next(new AppError(`Passwords do not match`, 400));
 
-  const createdUser = await UserModel.create({
+  const createdUser = await User.create({
     firstName,
     lastName,
     email,
@@ -67,13 +71,14 @@ const signup = catchAsync(async (req, res) => {
 
   return res.status(201).json({
     token,
+    user: createdUser,
   });
 });
 
 const changePassword = catchAsync(async (req, res, next) => {
   const { currentPassword, updatedPassword, updatedPasswordConfirm } = req.body;
 
-  const user = await UserModel.findByPk(req.user.id);
+  const user = await User.findByPk(req.user.id);
 
   if (!(await user.comparePasswords(currentPassword, user.password)))
     return next(new AppError(`Incorrect password`, 401));

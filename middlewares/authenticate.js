@@ -2,7 +2,7 @@ const { promisify } = require('util');
 const jwt = require('jsonwebtoken');
 const AppError = require('../utils/CustomError');
 const { catchAsync } = require('../utils/catchAsync');
-const UserModel = require('../models/userModel-pg');
+const User = require('../models/user');
 const { USER_STATUSES } = require('../utils/constants');
 const { removeSensitiveUserData } = require('../utils/helpers');
 
@@ -20,7 +20,7 @@ exports.authenticate = catchAsync(async (req, res, next) => {
   const decoded = await promisify(jwt.verify)(token, process.env.JWT_TOKEN_KEY);
 
   // Check if user exists
-  const user = await UserModel.findOne({
+  const user = await User.findOne({
     where: {
       id: decoded.id,
       status: USER_STATUSES.ACTIVE,
