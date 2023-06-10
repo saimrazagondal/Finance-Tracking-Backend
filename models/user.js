@@ -8,6 +8,7 @@ const User = sequelize.define(
   'user',
   {
     email: {
+      // TODO Add unique check
       type: DataTypes.STRING,
       allowNull: false,
       validate: {

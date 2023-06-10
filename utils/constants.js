@@ -13,3 +13,8 @@ exports.SENSITIVE_USER_FIELDS = [
   'passwordChangedAt',
   'deactivatedAt',
 ];
+
+exports.ROLES = {
+  ADMIN: 'ADMIN',
+  USER: 'USER',
+};
