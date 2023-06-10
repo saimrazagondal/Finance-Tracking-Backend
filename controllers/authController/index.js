@@ -11,6 +11,11 @@ const generateToken = (data) => {
   });
 };
 
+/**
+ * TODO
+ * If user is deactivated, return response
+ * response should have user status, error message and time left until permanent deletion
+ */
 const login = catchAsync(async (req, res, next) => {
   const { email, password } = req.body;
 
@@ -43,6 +48,11 @@ const login = catchAsync(async (req, res, next) => {
   });
 });
 
+/**
+ * TODO
+ * Add default role of 'user' while signing up
+ * Admin user will be created from database
+ */
 const signup = catchAsync(async (req, res) => {
   const {
     firstName,
@@ -75,6 +85,8 @@ const signup = catchAsync(async (req, res) => {
   });
 });
 
+// TODO
+// Only user themselves can change password. If they lose access, then use forgot password flow
 const changePassword = catchAsync(async (req, res, next) => {
   const { currentPassword, updatedPassword, updatedPasswordConfirm } = req.body;
 
@@ -97,5 +109,7 @@ const changePassword = catchAsync(async (req, res, next) => {
 
   return res.status(200).json({ message: 'success' });
 });
+
+// TODO: Forgot password flow apis
 
 module.exports = { login, signup, changePassword };

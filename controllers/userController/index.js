@@ -8,6 +8,11 @@ const {
   SENSITIVE_USER_FIELDS,
 } = require('../../utils/constants');
 
+/**
+ * TODO
+ * Only allow super admin users to view all users
+ * include inactive users
+ */
 exports.getAllUsers = catchAsync(async (req, res, next) => {
   const users = await User.findAll({
     attributes: { exclude: SENSITIVE_USER_FIELDS },
@@ -28,6 +33,9 @@ exports.getAllUsers = catchAsync(async (req, res, next) => {
  * Get all details of user by user-id
  * @param includeTransactions {boolean}: if true, include all transactions of user
  *
+ * TODO
+ * Admin has all access
+ * User has access only to themselves
  */
 exports.getUserById = catchAsync(async (req, res, next) => {
   const { id } = req.params;
@@ -57,6 +65,9 @@ exports.getUserById = catchAsync(async (req, res, next) => {
  * Update details of a user
  * Currently supports updating firstName and lastName only
  *
+ * TODO
+ * Admin has all access
+ * User can only update their own data
  */
 exports.updateUserById = catchAsync(async (req, res, next) => {
   const { id } = req.params;
@@ -78,6 +89,10 @@ exports.updateUserById = catchAsync(async (req, res, next) => {
  * Updates the status field of user from active to inactive
  * Users can only deactivate their own accounts
  *
+ * TODO
+ * Admin has all access
+ * User can only deactivate themselves
+ * After 2 weeks of deactivation, user will be unable to access their account
  */
 exports.deactivateUser = catchAsync(async (req, res, next) => {
   const { id } = req.params;
@@ -97,3 +112,5 @@ exports.deactivateUser = catchAsync(async (req, res, next) => {
 
   return res.status(200).json({ message: 'User Deactivated!' });
 });
+
+// TODO Activate user
