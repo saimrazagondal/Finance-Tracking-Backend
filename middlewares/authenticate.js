@@ -3,8 +3,7 @@ const jwt = require('jsonwebtoken');
 const AppError = require('../utils/CustomError');
 const { catchAsync } = require('../utils/catchAsync');
 const User = require('../models/user');
-const { USER_STATUSES } = require('../utils/constants');
-const { removeSensitiveUserData } = require('../utils/helpers');
+const { USER_STATUSES, SENSITIVE_USER_FIELDS } = require('../utils/constants');
 
 exports.authenticate = catchAsync(async (req, res, next) => {
   // Check if token is present
@@ -25,6 +24,7 @@ exports.authenticate = catchAsync(async (req, res, next) => {
       id: decoded.id,
       status: USER_STATUSES.ACTIVE,
     },
+    attributes: { exclude: SENSITIVE_USER_FIELDS },
   });
 
   if (!user) return next(new AppError(`User does not exist`, 401));
@@ -36,6 +36,6 @@ exports.authenticate = catchAsync(async (req, res, next) => {
     );
 
   // Grant access
-  req.user = removeSensitiveUserData(user.toJSON());
+  req.user = user;
   next();
 });

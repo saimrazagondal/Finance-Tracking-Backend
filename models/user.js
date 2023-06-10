@@ -4,6 +4,7 @@ const bcrypt = require('bcryptjs');
 const { USER_STATUSES } = require('../utils/constants');
 const { removeSensitiveUserData } = require('../utils/helpers');
 
+// TODO Ask about added fields via migrations. How to add them here in advance
 const User = sequelize.define(
   'user',
   {

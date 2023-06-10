@@ -1,9 +1,10 @@
 const AppError = require('../../utils/CustomError');
 const { catchAsync } = require('../../utils/catchAsync.js');
 const jwt = require('jsonwebtoken');
-const { USER_STATUSES } = require('../../utils/constants');
+const { USER_STATUSES, ROLES } = require('../../utils/constants');
 const User = require('../../models/user');
 const { removeSensitiveUserData } = require('../../utils/helpers');
+const moment = require('moment');
 
 const generateToken = (data) => {
   return jwt.sign(data, process.env.JWT_TOKEN_KEY, {
@@ -11,11 +12,6 @@ const generateToken = (data) => {
   });
 };
 
-/**
- * TODO
- * If user is deactivated, return response
- * response should have user status, error message and time left until permanent deletion
- */
 const login = catchAsync(async (req, res, next) => {
   const { email, password } = req.body;
 
@@ -23,13 +19,21 @@ const login = catchAsync(async (req, res, next) => {
 
   if (!user) return next(new AppError('User does not exist', 404));
 
-  // If user has been deactivated, reactivate user
-  // TODO Check deactivatedAt to be les than 2 weeks
-  if (user.status === USER_STATUSES.INACTIVE)
+  // If user has been deactivated
+  if (user.status === USER_STATUSES.INACTIVE) {
+    // if deactivation date + 14 days is less than today i.e. in the past
+    if (moment.utc(user.deactivatedAt).add(14, 'd') < moment.utc(Date.now())) {
+      return res.status(404).json({
+        message: 'User does not exist',
+      });
+    }
+
+    // reactivate user
     await User.update(
       { status: USER_STATUSES.ACTIVE, deactivatedAt: null },
       { where: { email } }
     );
+  }
 
   // Compare passwords
   if (!(await user.comparePasswords(password, user.password)))
@@ -49,9 +53,8 @@ const login = catchAsync(async (req, res, next) => {
 });
 
 /**
- * TODO
- * Add default role of 'user' while signing up
- * Admin user will be created from database
+ * default user will be created as USER role.
+ * Admin users will be created from database manually
  */
 const signup = catchAsync(async (req, res) => {
   const {
@@ -72,6 +75,7 @@ const signup = catchAsync(async (req, res) => {
     email,
     password,
     passwordChangedAt,
+    role: ROLES.USER,
   });
 
   const token = generateToken({
@@ -85,8 +89,6 @@ const signup = catchAsync(async (req, res) => {
   });
 });
 
-// TODO
-// Only user themselves can change password. If they lose access, then use forgot password flow
 const changePassword = catchAsync(async (req, res, next) => {
   const { currentPassword, updatedPassword, updatedPasswordConfirm } = req.body;
 
@@ -97,7 +99,7 @@ const changePassword = catchAsync(async (req, res, next) => {
 
   if (currentPassword === updatedPassword)
     return next(
-      new AppError('Current and Updated passwords cannot be the same', 400)
+      new AppError('New password cannot be same as old password', 400)
     );
 
   if (updatedPassword !== updatedPasswordConfirm)
