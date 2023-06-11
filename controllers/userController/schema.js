@@ -1,7 +1,9 @@
 const Joi = require('joi');
 
 const getAllUsersSchema = {
-  queryStringParameters: Joi.object({}),
+  queryStringParameters: Joi.object({
+    includeInactive: Joi.boolean().default(false),
+  }),
   body: Joi.object({}),
   pathParameters: Joi.object({}),
 };

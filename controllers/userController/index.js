@@ -6,17 +6,26 @@ const { catchAsync } = require('../../utils/catchAsync');
 const {
   USER_STATUSES,
   SENSITIVE_USER_FIELDS,
+  ROLES,
 } = require('../../utils/constants');
 
 /**
- * TODO
- * Only allow super admin users to view all users
- * include inactive users
+ * Fetch all users from database. Only allowed to admin users
+ * @param includeInactive {boolean}: if true, include inactive users in response.
+ *
  */
 exports.getAllUsers = catchAsync(async (req, res, next) => {
+  if (req.user.role !== ROLES.ADMIN)
+    return next(new AppError(`Forbidden. Please login as an admin user.`, 403));
+
+  const { includeInactive } = req.query;
+  const whereClause = {};
+
+  if (!includeInactive) whereClause.status = USER_STATUSES.ACTIVE;
+
   const users = await User.findAll({
     attributes: { exclude: SENSITIVE_USER_FIELDS },
-    where: { status: USER_STATUSES.ACTIVE },
+    where: whereClause,
   });
 
   if (users.length === 0) return next(new AppError(`No record found`, 404));
@@ -31,33 +40,42 @@ exports.getAllUsers = catchAsync(async (req, res, next) => {
 
 /**
  * Get all details of user by user-id
+ * Admin has access to all active users. Non-admin users can only fetch their own data
  * @param includeTransactions {boolean}: if true, include all transactions of user
  *
- * TODO
- * Admin has all access
- * User has access only to themselves
  */
 exports.getUserById = catchAsync(async (req, res, next) => {
   const { id } = req.params;
   const { includeTransactions } = req.query;
 
-  // User is only authorized to fetch his own details
-  if (parseInt(id) !== req.user.id)
-    return next(
-      new AppError(`You are not authorized to access this user`, 401)
-    );
+  let { user } = req;
 
-  // Include all transactions for user
+  // Only admins are allowed to fetch data of other users
+  if (parseInt(id) !== user.id) {
+    if (user.role !== ROLES.ADMIN)
+      return next(
+        new AppError(`You are not authorized to access this user`, 401)
+      );
+
+    user = await User.findOne({
+      where: { id, status: USER_STATUSES.ACTIVE },
+      attributes: { exclude: SENSITIVE_USER_FIELDS },
+    });
+
+    if (!user)
+      return next(new AppError(`User does not exist or may be inactive`, 404));
+  }
+
   if (includeTransactions) {
-    req.user.transactions = await Transaction.findAll({
+    // Include all transactions for user
+    user.dataValues.transactions = await Transaction.findAll({
       where: {
-        userId: id,
+        userId: parseInt(id),
       },
     });
   }
-
   return res.status(200).json({
-    data: { user: req.user },
+    data: { user },
   });
 });
 
