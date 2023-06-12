@@ -82,19 +82,24 @@ exports.getUserById = catchAsync(async (req, res, next) => {
 /**
  * Update details of a user
  * Currently supports updating firstName and lastName only
- *
- * TODO
- * Admin has all access
- * User can only update their own data
+ * Non admin users can only update their own details
  */
 exports.updateUserById = catchAsync(async (req, res, next) => {
   const { id } = req.params;
 
-  // User is only authorized to update his own details
-  if (parseInt(id) !== req.user.id)
-    return next(
-      new AppError(`You are not authorized to update this user`, 401)
-    );
+  let { user } = req;
+
+  if (parseInt(id) !== req.user.id) {
+    // Only admins can update details of other users
+    if (user.role !== ROLES.ADMIN)
+      return next(
+        new AppError(`You are not authorized to update this user`, 401)
+      );
+
+    // if requested user is not self, check if exists
+    const fetchedUser = await User.findByPk(id);
+    if (!fetchedUser) return next(new AppError(`User does not exist`, 404));
+  }
 
   await User.update({ ...req.body }, { where: { id } });
 
@@ -107,26 +112,25 @@ exports.updateUserById = catchAsync(async (req, res, next) => {
  * Updates the status field of user from active to inactive
  * Users can only deactivate their own accounts
  *
- * TODO
- * Admin has all access
- * User can only deactivate themselves
- * After 2 weeks of deactivation, user will be unable to access their account
  */
 exports.deactivateUser = catchAsync(async (req, res, next) => {
   const { id } = req.params;
+  let { user } = req;
 
   // User is only authorized to update his own details
-  if (parseInt(id) !== req.user.id)
-    return next(new AppError(`Unauthorized`, 401));
+  if (parseInt(id) !== user.id) {
+    if (user.role !== ROLES.ADMIN)
+      return next(new AppError(`You do not have access to this user`, 401));
+
+    user = await User.findByPk(id);
+    if (!user) return next(new AppError(`User does not exist`, 404));
+  }
 
   // change status from active to inactive
-  await User.update(
-    {
-      status: USER_STATUSES.INACTIVE,
-      deactivatedAt: Date.now(),
-    },
-    { where: { id } }
-  );
+  user.status = USER_STATUSES.INACTIVE;
+  user.deactivatedAt = Date.now();
+
+  await user.save();
 
   return res.status(200).json({ message: 'User Deactivated!' });
 });
