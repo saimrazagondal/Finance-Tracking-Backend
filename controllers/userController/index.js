@@ -38,6 +38,32 @@ exports.getAllUsers = catchAsync(async (req, res, next) => {
   });
 });
 
+const checkAccessToUserAndFetch = async (
+  requestedUserId,
+  loggedInUser,
+  roles = [ROLES.ADMIN],
+  next
+) => {
+  if (parseInt(requestedUserId) !== loggedInUser?.id) {
+    if (!roles.includes(loggedInUser.role))
+      return next(
+        new AppError(`You are not authorized to access this user`, 401)
+      );
+
+    const user = await User.findOne({
+      where: { id: requestedUserId, status: USER_STATUSES.ACTIVE },
+      attributes: { exclude: SENSITIVE_USER_FIELDS },
+    });
+
+    if (!user)
+      return next(new AppError(`User does not exist or may be inactive`, 404));
+
+    return user;
+  }
+
+  return loggedInUser;
+};
+
 /**
  * Get all details of user by user-id
  * Admin has access to all active users. Non-admin users can only fetch their own data
@@ -51,20 +77,7 @@ exports.getUserById = catchAsync(async (req, res, next) => {
   let { user } = req;
 
   // Only admins are allowed to fetch data of other users
-  if (parseInt(id) !== user.id) {
-    if (user.role !== ROLES.ADMIN)
-      return next(
-        new AppError(`You are not authorized to access this user`, 401)
-      );
-
-    user = await User.findOne({
-      where: { id, status: USER_STATUSES.ACTIVE },
-      attributes: { exclude: SENSITIVE_USER_FIELDS },
-    });
-
-    if (!user)
-      return next(new AppError(`User does not exist or may be inactive`, 404));
-  }
+  user = await checkAccessToUserAndFetch(id, user, [ROLES.ADMIN], next);
 
   if (includeTransactions) {
     // Include all transactions for user
@@ -74,6 +87,7 @@ exports.getUserById = catchAsync(async (req, res, next) => {
       },
     });
   }
+
   return res.status(200).json({
     data: { user },
   });
@@ -89,19 +103,13 @@ exports.updateUserById = catchAsync(async (req, res, next) => {
 
   let { user } = req;
 
-  if (parseInt(id) !== req.user.id) {
-    // Only admins can update details of other users
-    if (user.role !== ROLES.ADMIN)
-      return next(
-        new AppError(`You are not authorized to update this user`, 401)
-      );
+  user = await checkAccessToUserAndFetch(id, user, [ROLES.ADMIN], next);
 
-    // if requested user is not self, check if exists
-    const fetchedUser = await User.findByPk(id);
-    if (!fetchedUser) return next(new AppError(`User does not exist`, 404));
-  }
+  Object.entries(req.body).forEach(([key, value]) => {
+    user[key] = value;
+  });
 
-  await User.update({ ...req.body }, { where: { id } });
+  await user.save();
 
   return res.status(200).json({
     message: 'Updated successfully!',
@@ -111,20 +119,14 @@ exports.updateUserById = catchAsync(async (req, res, next) => {
 /**
  * Updates the status field of user from active to inactive
  * Users can only deactivate their own accounts
- *
+ * Admins have access to all users
  */
 exports.deactivateUser = catchAsync(async (req, res, next) => {
   const { id } = req.params;
   let { user } = req;
 
-  // User is only authorized to update his own details
-  if (parseInt(id) !== user.id) {
-    if (user.role !== ROLES.ADMIN)
-      return next(new AppError(`You do not have access to this user`, 401));
-
-    user = await User.findByPk(id);
-    if (!user) return next(new AppError(`User does not exist`, 404));
-  }
+  // Non-admin user is only authorized to update their own details
+  user = await checkAccessToUserAndFetch(id, user, [ROLES.ADMIN], next);
 
   // change status from active to inactive
   user.status = USER_STATUSES.INACTIVE;
