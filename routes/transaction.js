@@ -11,6 +11,7 @@ const {
   getTransactionSchema,
   updateTransactionSchema,
   deleteTransactionSchema,
+  getAllTransactionSchema,
 } = require('../controllers/transactionController/schema');
 const { authenticate } = require('../middlewares/authenticate');
 const { validateSchema } = require('../middlewares/validateSchema');
@@ -20,7 +21,11 @@ const router = express.Router();
 
 router
   .route('/')
-  .get(authenticate, getAllTransactions)
+  .get(
+    authenticate,
+    validateSchema(getAllTransactionSchema),
+    getAllTransactions
+  )
   .post(
     authenticate,
     validateSchema(createTransactionSchema),

@@ -14,6 +14,14 @@ const createTransactionSchema = {
   pathParameters: Joi.object({}),
 };
 
+const getAllTransactionSchema = {
+  queryStringParameters: Joi.object({
+    userId: Joi.number(),
+  }),
+  body: Joi.object({}),
+  pathParameters: Joi.object({}),
+};
+
 const getTransactionSchema = {
   queryStringParameters: Joi.object({}),
   body: Joi.object({}),
@@ -48,4 +56,5 @@ module.exports = {
   getTransactionSchema,
   updateTransactionSchema,
   deleteTransactionSchema,
+  getAllTransactionSchema,
 };

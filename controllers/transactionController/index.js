@@ -1,16 +1,49 @@
 const Transaction = require('../../models/transactions');
 const AppError = require('../../utils/CustomError');
 const { catchAsync } = require('../../utils/catchAsync');
+const { ROLES } = require('../../utils/constants');
 
 /**
- * TODO
- * If admin: fetch all transactions in db
- * Admin can fetch transactions by user id
- * If user: fetch only self transactions
+ *
+ * @param {*} role
+ * @param {*} requestedUserId
+ * @param {*} loggedInUserId
+ * @returns object containing where statement or undefined
+ *
+ * if user is admin
+ * if userId is not empty, return where statement for only requested user else return empty
+ *
+ * if user is not admin
+ * if userId is not empty and requested id is not users own id, throw error
+ * else return where statement with id as loggedInUserId
+ *
  */
-const getAllTransactions = catchAsync(async (req, res) => {
+const generateWhereClause = (role, requestedUserId, loggedInUserId) => {
+  if (role === ROLES.ADMIN) {
+    if (requestedUserId) return { userId: requestedUserId };
+
+    return;
+  }
+
+  if (requestedUserId && parseInt(requestedUserId) !== parseInt(loggedInUserId))
+    throw new AppError(`You do not have access to this user`, 401);
+
+  return { userId: loggedInUserId };
+};
+
+/**
+ * @param {number} userId if not empty, only transactions of given id will be returned if user has access
+ * admin has access to all transactions
+ * user can only access their own transactions
+ */
+const getAllTransactions = catchAsync(async (req, res, next) => {
+  const { userId } = req.query;
+  let whereClause;
+
+  whereClause = generateWhereClause(req.user.role, userId, req.user.id, next);
+
   const transactions = await Transaction.findAll({
-    where: { userId: req?.user?.id },
+    where: whereClause,
     order: [['createdAt', 'ASC']],
   });
 
