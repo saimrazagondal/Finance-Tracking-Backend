@@ -5,6 +5,7 @@ const {
   getUserById,
   updateUserById,
   deactivateUser,
+  activateUser,
 } = require('../controllers/userController');
 const { validateSchema } = require('../middlewares');
 const {
@@ -24,5 +25,6 @@ router
   .patch(authenticate, validateSchema(updateUserByIdSchema), updateUserById);
 
 router.patch('/deactivate/:id', authenticate, deactivateUser);
+router.patch('/activate/:id', authenticate, activateUser);
 
 module.exports = { userRoutes: router };

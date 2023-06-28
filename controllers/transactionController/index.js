@@ -52,9 +52,6 @@ const getAllTransactions = catchAsync(async (req, res, next) => {
   });
 });
 
-// TODO
-// User and Admin can create transaction for themselves only
-// Should we allow admins to create transactions for other users??
 const createTransaction = catchAsync(async (req, res) => {
   const { amount, transactionType, description, date } = req.body;
 
@@ -62,7 +59,7 @@ const createTransaction = catchAsync(async (req, res) => {
     amount,
     transactionType,
     description,
-    date,
+    date: date || Date.now(),
     userId: req.user.id,
   });
 
@@ -72,9 +69,8 @@ const createTransaction = catchAsync(async (req, res) => {
 });
 
 /**
- * TODO
- * Admin has all access
- * User can fetch transaction only if it belongs to them
+ * Non admin user can only access their own transactions
+ *
  */
 const getTransactionById = catchAsync(async (req, res) => {
   res.status(200).json({
@@ -83,10 +79,9 @@ const getTransactionById = catchAsync(async (req, res) => {
 });
 
 /**
- * TODO
- * Admin has all access
- * User can update transaction only if it belongs to them
- * Should we allow admins to update transactions of other users??
+ * Admins can update any transaction
+ * Non Admin users can only update their own transactions
+ *
  */
 const updateTransactionById = catchAsync(async (req, res) => {
   const { id } = req.params;
@@ -110,19 +105,12 @@ const updateTransactionById = catchAsync(async (req, res) => {
 });
 
 /**
- * TODO
- * Admin has all access
- * User can delete transaction only if it belongs to them
- * Should we allow admins to delete transactions of other users??
+ * Admin can delete any transaction
+ * Non admin users can delete only their own transactions
+ *
  */
 const deleteTransactionById = catchAsync(async (req, res, next) => {
   const { id } = req.params;
-
-  // check that only the logged in user can delete their id
-  if (req.transaction?.userId !== req.user?.id)
-    return next(
-      new AppError(`You are not authorized to delete this transaction`, 401)
-    );
 
   // delete transaction
   await Transaction.destroy({ where: { id } });

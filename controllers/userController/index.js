@@ -134,4 +134,27 @@ exports.deactivateUser = catchAsync(async (req, res) => {
   return res.status(200).json({ message: 'User Deactivated!' });
 });
 
-// TODO Activate user
+/**
+ * Only admin users can activate user
+ *
+ */
+exports.activateUser = catchAsync(async (req, res, next) => {
+  const { id } = req.params;
+  let { user } = req;
+
+  if (user.role !== ROLES.ADMIN)
+    return next(
+      new AppError(
+        `Please contact an admin to get your account re-activated`,
+        401
+      )
+    );
+
+  // reactivate user
+  await User.update(
+    { status: USER_STATUSES.ACTIVE, deactivatedAt: null },
+    { where: { id } }
+  );
+
+  return res.status(200).json({ message: 'User successfully activated' });
+});
