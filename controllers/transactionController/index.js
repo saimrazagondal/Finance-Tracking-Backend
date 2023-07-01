@@ -52,8 +52,12 @@ const getAllTransactions = catchAsync(async (req, res, next) => {
   });
 });
 
-const createTransaction = catchAsync(async (req, res) => {
-  const { amount, transactionType, description, date } = req.body;
+const createTransaction = catchAsync(async (req, res, next) => {
+  const { amount, transactionType, description, date, subcategoryId } =
+    req.body;
+
+  if (!subcategoryId)
+    return next(new AppError(`subcategoryId is required`, 400));
 
   const newTrans = await Transaction.create({
     amount,
@@ -61,6 +65,7 @@ const createTransaction = catchAsync(async (req, res) => {
     description,
     date: date || Date.now(),
     userId: req.user.id,
+    subcategoryId,
   });
 
   res.status(201).json({

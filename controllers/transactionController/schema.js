@@ -9,7 +9,10 @@ const createTransactionSchema = {
     amount: Joi.number().required(),
     transactionType: Joi.string().valid(INCOME, EXPENSE).required(),
     date: Joi.date(),
-    description: Joi.string().max(200),
+    description: Joi.string().max(200).messages({
+      'string.max': 'Description cannot be more than 200 characters long',
+    }),
+    subcategoryId: Joi.number().required(),
   }),
   pathParameters: Joi.object({}),
 };

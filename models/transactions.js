@@ -46,6 +46,13 @@ const Transaction = sequelize.define(
         key: 'id',
       },
     },
+    subcategoryId: {
+      type: DataTypes.INTEGER,
+      references: {
+        model: 'subcategories',
+        key: 'id',
+      },
+    },
   },
   {
     tableName: 'transactions',
