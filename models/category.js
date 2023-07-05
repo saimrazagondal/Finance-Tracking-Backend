@@ -4,7 +4,7 @@ const sequelize = require('../db/client');
 const Category = sequelize.define(
   'categories',
   {
-    name: { type: DataTypes.STRING, allowNull: false, unique: true },
+    name: { type: DataTypes.STRING, allowNull: false },
     userId: {
       type: DataTypes.INTEGER,
       references: {

@@ -25,6 +25,9 @@ exports.globalErrorHandler = (err, req, res, next) => {
     if (error.name === 'SequelizeValidationError')
       error = new AppError(error?.errors?.[0]?.message, 400);
 
+    if (error.name === 'SequelizeUniqueConstraintError')
+      error = new AppError(error?.errors?.[0]?.message, 400);
+
     if (error.name === 'SequelizeForeignKeyConstraintError')
       error = new AppError('Incorrect Data.', 400);
 

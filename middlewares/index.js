@@ -1,3 +1,4 @@
-const { validateSchema } = require('./validateSchema')
+const { validateSchema } = require('./validateSchema');
+const { authenticate } = require('./authenticate');
 
-module.exports = { validateSchema }
+module.exports = { validateSchema, authenticate };

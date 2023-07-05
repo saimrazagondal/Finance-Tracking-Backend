@@ -1,8 +1,5 @@
-'use strict';
-
 const { CATEGORIES } = require('../utils/constants');
 
-/** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
     const transaction = await queryInterface.sequelize.transaction();
@@ -17,7 +14,10 @@ module.exports = {
             primaryKey: true,
             type: Sequelize.INTEGER,
           },
-          name: { type: Sequelize.STRING, allowNull: false, unique: true },
+          name: {
+            type: Sequelize.STRING,
+            allowNull: false,
+          },
           userId: {
             type: Sequelize.INTEGER,
             references: {
@@ -34,7 +34,9 @@ module.exports = {
             type: Sequelize.DATE,
           },
         },
-        { transaction }
+        {
+          transaction,
+        }
       );
 
       await queryInterface.bulkInsert(
@@ -44,6 +46,11 @@ module.exports = {
           createdAt: new Date(),
           updatedAt: new Date(),
         })),
+        { transaction }
+      );
+
+      await queryInterface.sequelize.query(
+        `ALTER TABLE categories ADD CONSTRAINT name_userId_distinct_not_nulls UNIQUE NULLS NOT DISTINCT ("name", "userId");`,
         { transaction }
       );
 

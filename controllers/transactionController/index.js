@@ -1,54 +1,28 @@
+const sequelize = require('../../db/client');
 const Transaction = require('../../models/transactions');
 const AppError = require('../../utils/CustomError');
 const { catchAsync } = require('../../utils/catchAsync');
-const { ROLES } = require('../../utils/constants');
-
-/**
- *
- * @param {*} role
- * @param {*} requestedUserId
- * @param {*} loggedInUserId
- * @returns object containing where statement or undefined
- *
- * if user is admin
- * if userId is not empty, return where statement for only requested user else return empty
- *
- * if user is not admin
- * if userId is not empty and requested id is not users own id, throw error
- * else return where statement with id as loggedInUserId
- *
- */
-const generateWhereClause = (role, requestedUserId, loggedInUserId) => {
-  if (role === ROLES.ADMIN) {
-    if (requestedUserId) return { userId: requestedUserId };
-
-    return;
-  }
-
-  if (requestedUserId && parseInt(requestedUserId) !== parseInt(loggedInUserId))
-    throw new AppError(`You do not have access to this user`, 401);
-
-  return { userId: loggedInUserId };
-};
+const { generateGetAllTransactionsQuery } = require('./helpers');
 
 /**
  * @param {number} userId if not empty, only transactions of given id will be returned if user has access
  * admin has access to all transactions
  * user can only access their own transactions
  */
-const getAllTransactions = catchAsync(async (req, res, next) => {
+// TODO Add pagination
+const getAllTransactions = catchAsync(async (req, res) => {
   const { userId } = req.query;
-  let whereClause;
 
-  whereClause = generateWhereClause(req.user.role, userId, req.user.id, next);
+  const { query, params } = generateGetAllTransactionsQuery(
+    req.user.role,
+    userId,
+    req.user.id
+  );
 
-  const transactions = await Transaction.findAll({
-    where: whereClause,
-    order: [['createdAt', 'ASC']],
-  });
+  const [results] = await sequelize.query(query, { bind: params });
 
   res.status(200).json({
-    data: { results: transactions.length, transactions },
+    data: { results: results.length, transactions: results },
   });
 });
 

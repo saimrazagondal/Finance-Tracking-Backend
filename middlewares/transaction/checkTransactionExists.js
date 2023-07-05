@@ -9,7 +9,6 @@ exports.checkTransactionExists = async (req, res, next) => {
   if (!user)
     return next(new AppError('Unauthorized. Please log in to continue', 401));
 
-  // const trans = await Transaction.findByPk(id);
   const [trans] = await sequelize.query(
     `
     SELECT
@@ -19,7 +18,7 @@ exports.checkTransactionExists = async (req, res, next) => {
       c.id as "categoryId"
     FROM transactions t
     LEFT JOIN subcategories s ON t."subcategoryId" = s.id
-    LEFT JOIN categories c ON	c.id = s."categoryId"\
+    LEFT JOIN categories c ON	c.id = s."categoryId"
     WHERE t.id = $1
   `,
     {
