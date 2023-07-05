@@ -17,7 +17,27 @@ const getAllCategoriesSchema = {
   pathParameters: Joi.object({}),
 };
 
+const updateCategoryByIdSchema = {
+  queryStringParameters: Joi.object({}),
+  body: Joi.object({
+    name: Joi.string(),
+  }),
+  pathParameters: Joi.object({
+    id: Joi.number().required(),
+  }),
+};
+
+const deleteCategoryByIdSchema = {
+  queryStringParameters: Joi.object({}),
+  body: Joi.object({}),
+  pathParameters: Joi.object({
+    id: Joi.number().required(),
+  }),
+};
+
 module.exports = {
   createCategorySchema,
   getAllCategoriesSchema,
+  updateCategoryByIdSchema,
+  deleteCategoryByIdSchema,
 };
