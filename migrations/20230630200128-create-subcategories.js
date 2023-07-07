@@ -13,7 +13,7 @@ module.exports = {
             primaryKey: true,
             type: Sequelize.INTEGER,
           },
-          name: { type: Sequelize.STRING, allowNull: false, unique: true },
+          name: { type: Sequelize.STRING, allowNull: false },
           categoryId: {
             type: Sequelize.INTEGER,
             allowNull: false,
@@ -31,6 +31,11 @@ module.exports = {
             type: Sequelize.DATE,
           },
         },
+        { transaction }
+      );
+
+      await queryInterface.sequelize.query(
+        `ALTER TABLE subcategories ADD CONSTRAINT name_categoryId_distinct_not_nulls UNIQUE NULLS NOT DISTINCT ("name", "categoryId");`,
         { transaction }
       );
 

@@ -33,4 +33,4 @@ router
     deleteCategoryById
   );
 
-module.exports = { categoryRouter: router };
+module.exports = { categoryRoutes: router };

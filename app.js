@@ -1,8 +1,13 @@
 const express = require('express');
 const morgan = require('morgan');
-const { transactionRoutes, userRoutes, authRoutes } = require('./routes');
 const { globalErrorHandler } = require('./utils/globalErrorHandler');
-const { categoryRouter } = require('./routes/category');
+const {
+  transactionRoutes,
+  userRoutes,
+  authRoutes,
+  categoryRoutes,
+  subcategoryRoutes,
+} = require('./routes');
 
 const app = express();
 
@@ -13,7 +18,8 @@ app.use(express.json({ limit: '10kb' }));
 app.use('/api/transaction', transactionRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
-app.use('/api/category', categoryRouter);
+app.use('/api/category', categoryRoutes);
+app.use('/api/subcategory', subcategoryRoutes);
 
 app.use(globalErrorHandler);
 
