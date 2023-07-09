@@ -4,6 +4,7 @@ const AppError = require('../../utils/CustomError');
 const { ROLES } = require('../../utils/constants');
 const sequelize = require('../../db/client');
 const { validateAccessToCategory } = require('./helpers');
+const SubCategory = require('../../models/subcategory');
 
 /**
  * admins can add categories against any user
@@ -55,6 +56,29 @@ exports.getCategories = catchAsync(async (req, res) => {
 });
 
 /**
+ * return details of category if user has access or if is global category
+ * @param includeSubcategories {bool} if true, subcategories are attached with result
+ * @returns category details
+ */
+exports.getCategoryById = catchAsync(async (req, res) => {
+  const { id } = req.params;
+  const { includeSubcategories } = req.query;
+
+  const categoryDetails = await validateAccessToCategory(id, req.user, true);
+
+  if (includeSubcategories) {
+    const subcategories = await SubCategory.findAll({
+      where: { categoryId: id },
+      order: [['createdAt', 'ASC']],
+    });
+
+    categoryDetails.dataValues.subcategories = subcategories;
+  }
+
+  return res.status(200).json({ data: categoryDetails });
+});
+
+/**
  * Categories without a userId are global/default and cannot be updated
  * Admin can update any category with a userId
  * Non admin users can update only their own categories
@@ -78,14 +102,33 @@ exports.updateCategoryById = catchAsync(async (req, res) => {
  * Admins can delete any category that belongs to a user
  * Non admin users can only delete their own categories
  */
-exports.deleteCategoryById = catchAsync(async (req, res) => {
+exports.deleteCategoryById = catchAsync(async (req, res, next) => {
   const { id } = req.params;
 
   await validateAccessToCategory(id, req.user);
 
+  // check if transactions exist against this subcategory. If yes, throw error else delete
+  const [transactions] = await sequelize.query(
+    `SELECT COUNT(*) FROM
+	    transactions t
+      JOIN subcategories s ON t."subcategoryId" = s.id
+      JOIN categories c on s."categoryId" = c.id
+      WHERE c.id = $1;
+    `,
+    { bind: [id] }
+  );
+
+  if (parseInt(transactions?.[0]?.count || 0) > 0)
+    return next(
+      new AppError(
+        `Not allowed. You have transactions listed against this subcategory`,
+        403
+      )
+    );
+
   await Category.destroy({ where: { id } });
 
   return res.status(200).json({
-    message: 'Category deleted successfully',
+    message: 'TBI',
   });
 });

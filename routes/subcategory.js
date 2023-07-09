@@ -5,11 +5,15 @@ const {
   createSubcategorySchema,
   getAllSubcategoriesSchema,
   updateSubcategoryByIdSchema,
+  deleteSubcategoryByIdSchema,
+  getSubcategoryByIdSchema,
 } = require('../controllers/subcategoryController/schema');
 const {
   createSubcategory,
   getAllSubcategories,
   updateSubcategoryById,
+  deleteSubcategoryById,
+  getSubcategoryById,
 } = require('../controllers/subcategoryController');
 
 const router = express.Router();
@@ -29,10 +33,20 @@ router
 
 router
   .route('/:id')
+  .get(
+    authenticate,
+    validateSchema(getSubcategoryByIdSchema),
+    getSubcategoryById
+  )
   .patch(
     authenticate,
     validateSchema(updateSubcategoryByIdSchema),
     updateSubcategoryById
+  )
+  .delete(
+    authenticate,
+    validateSchema(deleteSubcategoryByIdSchema),
+    deleteSubcategoryById
   );
 
 module.exports = { subcategoryRoutes: router };

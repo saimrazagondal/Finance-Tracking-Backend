@@ -17,6 +17,16 @@ const getAllCategoriesSchema = {
   pathParameters: Joi.object({}),
 };
 
+const getCategoryByIdSchema = {
+  queryStringParameters: Joi.object({
+    includeSubcategories: Joi.boolean().default(false),
+  }),
+  body: Joi.object({}),
+  pathParameters: Joi.object({
+    id: Joi.number().required(),
+  }),
+};
+
 const updateCategoryByIdSchema = {
   queryStringParameters: Joi.object({}),
   body: Joi.object({
@@ -40,4 +50,5 @@ module.exports = {
   getAllCategoriesSchema,
   updateCategoryByIdSchema,
   deleteCategoryByIdSchema,
+  getCategoryByIdSchema,
 };

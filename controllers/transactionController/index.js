@@ -10,7 +10,7 @@ const { generateGetAllTransactionsQuery } = require('./helpers');
  * user can only access their own transactions
  */
 // TODO Add pagination
-const getAllTransactions = catchAsync(async (req, res) => {
+exports.getAllTransactions = catchAsync(async (req, res) => {
   const { userId } = req.query;
 
   const { query, params } = generateGetAllTransactionsQuery(
@@ -26,7 +26,7 @@ const getAllTransactions = catchAsync(async (req, res) => {
   });
 });
 
-const createTransaction = catchAsync(async (req, res, next) => {
+exports.createTransaction = catchAsync(async (req, res, next) => {
   const { amount, transactionType, description, date, subcategoryId } =
     req.body;
 
@@ -51,7 +51,7 @@ const createTransaction = catchAsync(async (req, res, next) => {
  * Non admin user can only access their own transactions
  *
  */
-const getTransactionById = catchAsync(async (req, res) => {
+exports.getTransactionById = catchAsync(async (req, res) => {
   res.status(200).json({
     data: req.transaction,
   });
@@ -62,7 +62,7 @@ const getTransactionById = catchAsync(async (req, res) => {
  * Non Admin users can only update their own transactions
  *
  */
-const updateTransactionById = catchAsync(async (req, res) => {
+exports.updateTransactionById = catchAsync(async (req, res) => {
   const { id } = req.params;
 
   // Object.entries(req.body).forEach(([key, value]) => {
@@ -88,7 +88,7 @@ const updateTransactionById = catchAsync(async (req, res) => {
  * Non admin users can delete only their own transactions
  *
  */
-const deleteTransactionById = catchAsync(async (req, res, next) => {
+exports.deleteTransactionById = catchAsync(async (req, res, next) => {
   const { id } = req.params;
 
   // delete transaction
@@ -98,11 +98,3 @@ const deleteTransactionById = catchAsync(async (req, res, next) => {
     message: 'Transaction deleted successfully!',
   });
 });
-
-module.exports = {
-  getAllTransactions,
-  getTransactionById,
-  createTransaction,
-  updateTransactionById,
-  deleteTransactionById,
-};

@@ -1,18 +1,12 @@
 const AppError = require('../../utils/CustomError');
 const { catchAsync } = require('../../utils/catchAsync.js');
-const jwt = require('jsonwebtoken');
 const { USER_STATUSES, ROLES } = require('../../utils/constants');
 const User = require('../../models/user');
-const { removeSensitiveUserData } = require('../../utils/helpers');
+const { removeSensitiveUserData, generateOtp } = require('../../utils/helpers');
 const moment = require('moment');
+const { generateToken } = require('./helpers');
 
-const generateToken = (data) => {
-  return jwt.sign(data, process.env.JWT_TOKEN_KEY, {
-    expiresIn: '5000000',
-  });
-};
-
-const login = catchAsync(async (req, res, next) => {
+exports.login = catchAsync(async (req, res, next) => {
   const { email, password } = req.body;
 
   let user = await User.findOne({ where: { email } });
@@ -56,7 +50,7 @@ const login = catchAsync(async (req, res, next) => {
  * default user will be created as USER role.
  * Admin users will be created from database manually
  */
-const signup = catchAsync(async (req, res) => {
+exports.signup = catchAsync(async (req, res) => {
   const {
     firstName,
     lastName,
@@ -89,7 +83,7 @@ const signup = catchAsync(async (req, res) => {
   });
 });
 
-const changePassword = catchAsync(async (req, res, next) => {
+exports.changePassword = catchAsync(async (req, res, next) => {
   const { currentPassword, updatedPassword, updatedPasswordConfirm } = req.body;
 
   const user = await User.findByPk(req.user.id);
@@ -112,6 +106,19 @@ const changePassword = catchAsync(async (req, res, next) => {
   return res.status(200).json({ message: 'success' });
 });
 
-// TODO: Forgot password flow apis
+// todo store otp in db along with expiration date
+exports.forgotPassword = catchAsync(async (req, res, next) => {
+  const { email } = req.body;
 
-module.exports = { login, signup, changePassword };
+  const user = await User.findOne({ where: { email } });
+
+  if (!user) return next(new AppError(`User not found`, 404));
+  const OTP = generateOtp(6);
+
+  res.status(200).json({
+    message: 'Please use the following OTP Code to change your password',
+    data: { OTP },
+  });
+});
+
+// TODO: verify otp, send email

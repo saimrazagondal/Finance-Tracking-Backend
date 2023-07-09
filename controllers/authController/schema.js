@@ -36,4 +36,17 @@ const changePasswordSchema = {
   pathParameters: Joi.object({}),
 };
 
-module.exports = { loginSchema, signupSchema, changePasswordSchema };
+const forgotPasswordSchema = {
+  queryStringParameters: Joi.object({}),
+  body: Joi.object({
+    email: Joi.string().email().required(),
+  }),
+  pathParameters: Joi.object({}),
+};
+
+module.exports = {
+  loginSchema,
+  signupSchema,
+  changePasswordSchema,
+  forgotPasswordSchema,
+};

@@ -4,6 +4,7 @@ const {
   getCategories,
   updateCategoryById,
   deleteCategoryById,
+  getCategoryById,
 } = require('../controllers/categoryController');
 const { validateSchema, authenticate } = require('../middlewares');
 const {
@@ -11,6 +12,7 @@ const {
   getAllCategoriesSchema,
   updateCategoryByIdSchema,
   deleteCategoryByIdSchema,
+  getCategoryByIdSchema,
 } = require('../controllers/categoryController/schema');
 
 const router = express.Router();
@@ -22,6 +24,7 @@ router
 
 router
   .route('/:id')
+  .get(authenticate, validateSchema(getCategoryByIdSchema), getCategoryById)
   .patch(
     authenticate,
     validateSchema(updateCategoryByIdSchema),

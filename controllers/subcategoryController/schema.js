@@ -17,6 +17,14 @@ const getAllSubcategoriesSchema = {
   pathParameters: Joi.object({}),
 };
 
+const getSubcategoryByIdSchema = {
+  queryStringParameters: Joi.object({}),
+  body: Joi.object({}),
+  pathParameters: Joi.object({
+    id: Joi.number().required(),
+  }),
+};
+
 const updateSubcategoryByIdSchema = {
   queryStringParameters: Joi.object({}),
   body: Joi.object({
@@ -27,8 +35,18 @@ const updateSubcategoryByIdSchema = {
   }),
 };
 
+const deleteSubcategoryByIdSchema = {
+  queryStringParameters: Joi.object({}),
+  body: Joi.object({}),
+  pathParameters: Joi.object({
+    id: Joi.number().required(),
+  }),
+};
+
 module.exports = {
   createSubcategorySchema,
   getAllSubcategoriesSchema,
   updateSubcategoryByIdSchema,
+  deleteSubcategoryByIdSchema,
+  getSubcategoryByIdSchema,
 };

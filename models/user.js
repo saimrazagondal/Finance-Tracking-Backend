@@ -5,6 +5,7 @@ const { USER_STATUSES, ROLES } = require('../utils/constants');
 const { removeSensitiveUserData } = require('../utils/helpers');
 
 // TODO Ask about added fields via migrations. How to add them here in advance
+// todo add profile image
 const User = sequelize.define(
   'user',
   {
