@@ -3,7 +3,7 @@
     "username": "postgres",
     "password": "mypassword",
     "database": "finance_tracking_dev",
-    "host": "127.0.0.1",
+    "host": "database",
     "dialect": "postgres"
   },
   "test": {
@@ -17,7 +17,7 @@
     "username": "postgres",
     "password": "mypassword",
     "database": "finance_tracking_dev",
-    "host": "127.0.0.1",
+    "host": "database",
     "dialect": "postgres"
   }
 }
